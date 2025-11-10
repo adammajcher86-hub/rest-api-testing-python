@@ -11,6 +11,7 @@ import pytest
 import time
 import os
 
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
 
 class TestUsersAPI:
     """Test suite for Users API endpoints"""
