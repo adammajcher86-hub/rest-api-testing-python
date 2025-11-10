@@ -11,19 +11,18 @@ import pytest
 import time
 import os
 
+BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
 
 class TestUsersAPI:
     """Test suite for Users API endpoints"""
     
     # Change this to use local server
-    BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
-    # BASE_URL = "https://reqres.in"    # Uncomment to use real API
-    
+
     @pytest.mark.smoke
     def test_get_list_users(self):
         """Test retrieving list of users - GET /api/users"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users"
+        url = f"{BASE_URL}/api/users"
         params = {"page": 1}
         
         # Act
@@ -47,7 +46,7 @@ class TestUsersAPI:
     def test_get_list_users_page_2(self):
         """Test retrieving list of users on page 2 - GET /api/users?page=2"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users"
+        url = f"{BASE_URL}/api/users"
         params = {"page": 2}
         
         # Act
@@ -66,7 +65,7 @@ class TestUsersAPI:
         """Test retrieving a single user by ID - GET /api/users/{id}"""
         # Arrange
         user_id = 2
-        url = f"{self.BASE_URL}/api/users/{user_id}"
+        url = f"{BASE_URL}/api/users/{user_id}"
         
         # Act
         response = requests.get(url)
@@ -93,7 +92,7 @@ class TestUsersAPI:
     def test_get_user_not_found(self):
         """Test that requesting non-existent user returns 404 - GET /api/users/{id}"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users/999"
+        url = f"{BASE_URL}/api/users/999"
         
         # Act
         response = requests.get(url)
@@ -107,7 +106,7 @@ class TestUsersAPI:
     def test_create_user(self):
         """Test creating a new user - POST /api/users"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users"
+        url = f"{BASE_URL}/api/users"
         user_data = {
             "name": "Adam Majcher",
             "job": "QA Engineer"
@@ -132,7 +131,7 @@ class TestUsersAPI:
         """Test updating an existing user - PUT /api/users/{id}"""
         # Arrange
         user_id = 2
-        url = f"{self.BASE_URL}/api/users/{user_id}"
+        url = f"{BASE_URL}/api/users/{user_id}"
         update_data = {
             "name": "Adam Updated",
             "job": "Senior QA Engineer"
@@ -156,7 +155,7 @@ class TestUsersAPI:
         """Test partially updating a user - PATCH /api/users/{id}"""
         # Arrange
         user_id = 2
-        url = f"{self.BASE_URL}/api/users/{user_id}"
+        url = f"{BASE_URL}/api/users/{user_id}"
         patch_data = {
             "job": "Lead QA Engineer"
         }
@@ -178,7 +177,7 @@ class TestUsersAPI:
         """Test deleting a user - DELETE /api/users/{id}"""
         # Arrange
         user_id = 2
-        url = f"{self.BASE_URL}/api/users/{user_id}"
+        url = f"{BASE_URL}/api/users/{user_id}"
         
         # Act
         response = requests.delete(url)
@@ -192,7 +191,7 @@ class TestUsersAPI:
     def test_get_all_users(self):
         """Test retrieving multiple users by iterating through pages"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users"
+        url = f"{BASE_URL}/api/users"
         all_users = []
         
         # Act - Get first page to know total pages
@@ -222,7 +221,7 @@ class TestUsersAPI:
     def test_user_data_structure(self):
         """Test that user data has all required fields"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users/1"
+        url = f"{BASE_URL}/api/users/1"
         
         # Act
         response = requests.get(url)
@@ -256,13 +255,12 @@ class TestUsersAPI:
 class TestResourcesAPI:
     """Test suite for Resources API endpoints"""
     
-    BASE_URL = "http://localhost:5000"
     
     @pytest.mark.smoke
     def test_get_list_resources(self):
         """Test retrieving list of resources - GET /api/unknown"""
         # Arrange
-        url = f"{self.BASE_URL}/api/unknown"
+        url = f"{BASE_URL}/api/unknown"
         
         # Act
         response = requests.get(url)
@@ -288,7 +286,7 @@ class TestResourcesAPI:
         """Test retrieving a single resource - GET /api/unknown/{id}"""
         # Arrange
         resource_id = 2
-        url = f"{self.BASE_URL}/api/unknown/{resource_id}"
+        url = f"{BASE_URL}/api/unknown/{resource_id}"
         
         # Act
         response = requests.get(url)
@@ -312,7 +310,7 @@ class TestResourcesAPI:
     def test_get_resource_not_found(self):
         """Test that requesting non-existent resource returns 404"""
         # Arrange
-        url = f"{self.BASE_URL}/api/unknown/999"
+        url = f"{BASE_URL}/api/unknown/999"
         
         # Act
         response = requests.get(url)
@@ -326,13 +324,12 @@ class TestResourcesAPI:
 class TestAuthentication:
     """Test suite for Authentication endpoints"""
     
-    BASE_URL = "http://localhost:5000"
     
     @pytest.mark.regression
     def test_register_successful(self):
         """Test successful user registration - POST /api/register"""
         # Arrange
-        url = f"{self.BASE_URL}/api/register"
+        url = f"{BASE_URL}/api/register"
         user_data = {
             "email": "eve.holt@reqres.in",
             "password": "pistol"
@@ -354,7 +351,7 @@ class TestAuthentication:
     def test_register_unsuccessful(self):
         """Test registration fails without password - POST /api/register"""
         # Arrange
-        url = f"{self.BASE_URL}/api/register"
+        url = f"{BASE_URL}/api/register"
         user_data = {
             "email": "sydney@fife"
         }
@@ -374,7 +371,7 @@ class TestAuthentication:
     def test_login_successful(self):
         """Test successful login - POST /api/login"""
         # Arrange
-        url = f"{self.BASE_URL}/api/login"
+        url = f"{BASE_URL}/api/login"
         credentials = {
             "email": "eve.holt@reqres.in",
             "password": "cityslicka"
@@ -395,7 +392,7 @@ class TestAuthentication:
     def test_login_unsuccessful(self):
         """Test login fails without password - POST /api/login"""
         # Arrange
-        url = f"{self.BASE_URL}/api/login"
+        url = f"{BASE_URL}/api/login"
         credentials = {
             "email": "peter@klaven"
         }
@@ -415,13 +412,12 @@ class TestAuthentication:
 class TestResponseTiming:
     """Test suite for response time validation"""
     
-    BASE_URL = "http://localhost:5000"
-    
+     
     @pytest.mark.performance
     def test_response_time_under_threshold(self):
         """Test that API responds within acceptable time"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users/1"
+        url = f"{BASE_URL}/api/users/1"
         max_response_time = 5.0  # 2 seconds
         
         # Act
@@ -439,7 +435,7 @@ class TestResponseTiming:
     def test_delayed_response(self):
         """Test API with delayed response - GET /api/users?delay=3"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users"
+        url = f"{BASE_URL}/api/users"
         params = {"delay": 3}
         
         # Act
@@ -458,13 +454,12 @@ class TestResponseTiming:
 class TestPagination:
     """Test suite for pagination functionality"""
     
-    BASE_URL = "http://localhost:5000"
     
     @pytest.mark.regression
     def test_pagination_info(self):
         """Test that pagination information is correct"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users"
+        url = f"{BASE_URL}/api/users"
         
         # Act
         response = requests.get(url, params={"page": 1})
@@ -487,7 +482,7 @@ class TestPagination:
     def test_last_page_has_correct_number_of_items(self):
         """Test that last page has correct number of items"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users"
+        url = f"{BASE_URL}/api/users"
         
         # Get first page to know total pages
         first_response = requests.get(url, params={"page": 1})
@@ -517,13 +512,12 @@ class TestPagination:
 class TestHeaders:
     """Test suite for HTTP headers validation"""
     
-    BASE_URL = "http://localhost:5000"
-    
+       
     @pytest.mark.regression
     def test_response_headers(self):
         """Test that response contains expected headers"""
         # Arrange
-        url = f"{self.BASE_URL}/api/users/1"
+        url = f"{BASE_URL}/api/users/1"
         
         # Act
         response = requests.get(url)
