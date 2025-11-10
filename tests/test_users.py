@@ -11,24 +11,19 @@ import pytest
 import time
 import os
 
-BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
 
 class TestUsersAPI:
     """Test suite for Users API endpoints"""
     
-    # Change this to use local server
 
     @pytest.mark.smoke
     def test_get_list_users(self):
         """Test retrieving list of users - GET /api/users"""
-        # Arrange
-        url = f"{BASE_URL}/api/users"
+        url = f"{API_BASE_URL}/api/users"
         params = {"page": 1}
         
-        # Act
         response = requests.get(url, params=params)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         response_data = response.json()
@@ -45,14 +40,11 @@ class TestUsersAPI:
     @pytest.mark.smoke
     def test_get_list_users_page_2(self):
         """Test retrieving list of users on page 2 - GET /api/users?page=2"""
-        # Arrange
-        url = f"{BASE_URL}/api/users"
+        url = f"{API_BASE_URL}/api/users"
         params = {"page": 2}
         
-        # Act
         response = requests.get(url, params=params)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         response_data = response.json()
         assert response_data["page"] == 2, "Page should be 2"
@@ -63,14 +55,11 @@ class TestUsersAPI:
     @pytest.mark.regression
     def test_get_single_user(self):
         """Test retrieving a single user by ID - GET /api/users/{id}"""
-        # Arrange
         user_id = 2
-        url = f"{BASE_URL}/api/users/{user_id}"
+        url = f"{API_BASE_URL}/api/users/{user_id}"
         
-        # Act
         response = requests.get(url)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         response_data = response.json()
@@ -91,13 +80,10 @@ class TestUsersAPI:
     @pytest.mark.negative
     def test_get_user_not_found(self):
         """Test that requesting non-existent user returns 404 - GET /api/users/{id}"""
-        # Arrange
-        url = f"{BASE_URL}/api/users/999"
+        url = f"{API_BASE_URL}/api/users/999"
         
-        # Act
         response = requests.get(url)
         
-        # Assert
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
         
         print("\n✅ 404 correctly returned for non-existent user")
@@ -105,17 +91,14 @@ class TestUsersAPI:
     @pytest.mark.regression
     def test_create_user(self):
         """Test creating a new user - POST /api/users"""
-        # Arrange
-        url = f"{BASE_URL}/api/users"
+        url = f"{API_BASE_URL}/api/users"
         user_data = {
             "name": "Adam Majcher",
             "job": "QA Engineer"
         }
         
-        # Act
         response = requests.post(url, json=user_data)
-        
-        # Assert
+
         assert response.status_code == 201, f"Expected 201, got {response.status_code}"
         
         response_data = response.json()
@@ -129,18 +112,15 @@ class TestUsersAPI:
     @pytest.mark.regression
     def test_update_user(self):
         """Test updating an existing user - PUT /api/users/{id}"""
-        # Arrange
         user_id = 2
-        url = f"{BASE_URL}/api/users/{user_id}"
+        url = f"{API_BASE_URL}/api/users/{user_id}"
         update_data = {
             "name": "Adam Updated",
             "job": "Senior QA Engineer"
         }
         
-        # Act
         response = requests.put(url, json=update_data)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         response_data = response.json()
@@ -153,17 +133,14 @@ class TestUsersAPI:
     @pytest.mark.regression
     def test_patch_user(self):
         """Test partially updating a user - PATCH /api/users/{id}"""
-        # Arrange
         user_id = 2
-        url = f"{BASE_URL}/api/users/{user_id}"
+        url = f"{API_BASE_URL}/api/users/{user_id}"
         patch_data = {
             "job": "Lead QA Engineer"
         }
         
-        # Act
         response = requests.patch(url, json=patch_data)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         response_data = response.json()
@@ -175,14 +152,11 @@ class TestUsersAPI:
     @pytest.mark.regression
     def test_delete_user(self):
         """Test deleting a user - DELETE /api/users/{id}"""
-        # Arrange
         user_id = 2
-        url = f"{BASE_URL}/api/users/{user_id}"
+        url = f"{API_BASE_URL}/api/users/{user_id}"
         
-        # Act
         response = requests.delete(url)
         
-        # Assert
         assert response.status_code == 204, f"Expected 204, got {response.status_code}"
         
         print("\n✅ User deleted successfully")
@@ -190,11 +164,9 @@ class TestUsersAPI:
     @pytest.mark.regression
     def test_get_all_users(self):
         """Test retrieving multiple users by iterating through pages"""
-        # Arrange
-        url = f"{BASE_URL}/api/users"
+        url = f"{API_BASE_URL}/api/users"
         all_users = []
         
-        # Act - Get first page to know total pages
         first_response = requests.get(url, params={"page": 1})
         assert first_response.status_code == 200
         
@@ -202,16 +174,13 @@ class TestUsersAPI:
         total_pages = first_data["total_pages"]
         all_users.extend(first_data["data"])
         
-        # Get remaining pages
         for page in range(2, total_pages + 1):
             response = requests.get(url, params={"page": page})
             assert response.status_code == 200
             all_users.extend(response.json()["data"])
         
-        # Assert
         assert len(all_users) == first_data["total"], "Should get all users"
         
-        # Verify no duplicate IDs
         user_ids = [user["id"] for user in all_users]
         assert len(user_ids) == len(set(user_ids)), "All user IDs should be unique"
         
@@ -220,31 +189,25 @@ class TestUsersAPI:
     @pytest.mark.regression
     def test_user_data_structure(self):
         """Test that user data has all required fields"""
-        # Arrange
-        url = f"{BASE_URL}/api/users/1"
+        url = f"{API_BASE_URL}/api/users/1"
         
-        # Act
         response = requests.get(url)
         
-        # Assert
         assert response.status_code == 200
         user = response.json()["data"]
         
-        # Check all required fields exist
         required_fields = ["id", "email", "first_name", "last_name", "avatar"]
         for field in required_fields:
             assert field in user, f"User should have '{field}' field"
             assert user[field] is not None, f"'{field}' should not be None"
             assert user[field] != "", f"'{field}' should not be empty"
         
-        # Check data types
         assert isinstance(user["id"], int), "ID should be integer"
         assert isinstance(user["email"], str), "Email should be string"
         assert isinstance(user["first_name"], str), "First name should be string"
         assert isinstance(user["last_name"], str), "Last name should be string"
         assert isinstance(user["avatar"], str), "Avatar should be string"
         
-        # Check email format
         assert "@" in user["email"], "Email should contain @"
         assert "." in user["email"], "Email should contain domain"
         
@@ -259,20 +222,16 @@ class TestResourcesAPI:
     @pytest.mark.smoke
     def test_get_list_resources(self):
         """Test retrieving list of resources - GET /api/unknown"""
-        # Arrange
-        url = f"{BASE_URL}/api/unknown"
+        url = f"{API_BASE_URL}/api/unknown"
         
-        # Act
         response = requests.get(url)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         response_data = response.json()
         assert "data" in response_data, "Response should contain 'data' key"
         assert len(response_data["data"]) > 0, "Data array should not be empty"
         
-        # Check resource structure
         first_resource = response_data["data"][0]
         assert "id" in first_resource, "Resource should have id"
         assert "name" in first_resource, "Resource should have name"
@@ -284,14 +243,11 @@ class TestResourcesAPI:
     @pytest.mark.regression
     def test_get_single_resource(self):
         """Test retrieving a single resource - GET /api/unknown/{id}"""
-        # Arrange
         resource_id = 2
-        url = f"{BASE_URL}/api/unknown/{resource_id}"
+        url = f"{API_BASE_URL}/api/unknown/{resource_id}"
         
-        # Act
         response = requests.get(url)
         
-        # Assert
         assert response.status_code == 200
         response_data = response.json()
         
@@ -309,13 +265,10 @@ class TestResourcesAPI:
     @pytest.mark.negative
     def test_get_resource_not_found(self):
         """Test that requesting non-existent resource returns 404"""
-        # Arrange
-        url = f"{BASE_URL}/api/unknown/999"
+        url = f"{API_BASE_URL}/api/unknown/999"
         
-        # Act
         response = requests.get(url)
         
-        # Assert
         assert response.status_code == 404
         
         print("\n✅ 404 correctly returned for non-existent resource")
@@ -328,17 +281,14 @@ class TestAuthentication:
     @pytest.mark.regression
     def test_register_successful(self):
         """Test successful user registration - POST /api/register"""
-        # Arrange
-        url = f"{BASE_URL}/api/register"
+        url = f"{API_BASE_URL}/api/register"
         user_data = {
             "email": "eve.holt@reqres.in",
             "password": "pistol"
         }
         
-        # Act
         response = requests.post(url, json=user_data)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         response_data = response.json()
@@ -350,16 +300,13 @@ class TestAuthentication:
     @pytest.mark.negative
     def test_register_unsuccessful(self):
         """Test registration fails without password - POST /api/register"""
-        # Arrange
-        url = f"{BASE_URL}/api/register"
+        url = f"{API_BASE_URL}/api/register"
         user_data = {
             "email": "sydney@fife"
         }
         
-        # Act
         response = requests.post(url, json=user_data)
         
-        # Assert
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
         
         response_data = response.json()
@@ -370,17 +317,14 @@ class TestAuthentication:
     @pytest.mark.regression
     def test_login_successful(self):
         """Test successful login - POST /api/login"""
-        # Arrange
-        url = f"{BASE_URL}/api/login"
+        url = f"{API_BASE_URL}/api/login"
         credentials = {
             "email": "eve.holt@reqres.in",
             "password": "cityslicka"
         }
         
-        # Act
         response = requests.post(url, json=credentials)
         
-        # Assert
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         response_data = response.json()
@@ -391,16 +335,13 @@ class TestAuthentication:
     @pytest.mark.negative
     def test_login_unsuccessful(self):
         """Test login fails without password - POST /api/login"""
-        # Arrange
-        url = f"{BASE_URL}/api/login"
+        url = f"{API_BASE_URL}/api/login"
         credentials = {
             "email": "peter@klaven"
         }
         
-        # Act
         response = requests.post(url, json=credentials)
         
-        # Assert
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
         
         response_data = response.json()
@@ -416,15 +357,12 @@ class TestResponseTiming:
     @pytest.mark.performance
     def test_response_time_under_threshold(self):
         """Test that API responds within acceptable time"""
-        # Arrange
-        url = f"{BASE_URL}/api/users/1"
-        max_response_time = 5.0  # 2 seconds
+        url = f"{API_BASE_URL}/api/users/1"
+        max_response_time = 5.0  # 5 seconds
         
-        # Act
         response = requests.get(url)
         response_time = response.elapsed.total_seconds()
         
-        # Assert
         assert response.status_code == 200
         assert response_time < max_response_time, \
             f"Response time {response_time:.2f}s exceeds threshold {max_response_time}s"
@@ -434,16 +372,13 @@ class TestResponseTiming:
     @pytest.mark.performance
     def test_delayed_response(self):
         """Test API with delayed response - GET /api/users?delay=3"""
-        # Arrange
-        url = f"{BASE_URL}/api/users"
+        url = f"{API_BASE_URL}/api/users"
         params = {"delay": 3}
         
-        # Act
         start_time = time.time()
         response = requests.get(url, params=params, timeout=10)
         elapsed_time = time.time() - start_time
         
-        # Assert
         assert response.status_code == 200
         assert elapsed_time >= 2.0, f"Response should be delayed by at least 2 seconds, got {elapsed_time:.2f}s"
         assert elapsed_time < 7.0, f"Response should not take longer than 7 seconds, got {elapsed_time:.2f}s"
@@ -458,20 +393,16 @@ class TestPagination:
     @pytest.mark.regression
     def test_pagination_info(self):
         """Test that pagination information is correct"""
-        # Arrange
-        url = f"{BASE_URL}/api/users"
+        url = f"{API_BASE_URL}/api/users"
         
-        # Act
         response = requests.get(url, params={"page": 1})
         data = response.json()
         
-        # Assert
         assert "page" in data
         assert "per_page" in data
         assert "total" in data
         assert "total_pages" in data
         
-        # Verify pagination math
         expected_pages = (data["total"] + data["per_page"] - 1) // data["per_page"]
         assert data["total_pages"] == expected_pages, "Total pages calculation should be correct"
         
@@ -481,10 +412,8 @@ class TestPagination:
     @pytest.mark.regression
     def test_last_page_has_correct_number_of_items(self):
         """Test that last page has correct number of items"""
-        # Arrange
-        url = f"{BASE_URL}/api/users"
-        
-        # Get first page to know total pages
+        url = f"{API_BASE_URL}/api/users"
+
         first_response = requests.get(url, params={"page": 1})
         first_data = first_response.json()
         
@@ -492,16 +421,14 @@ class TestPagination:
         total_items = first_data["total"]
         per_page = first_data["per_page"]
         
-        # Act - Get last page
+
         last_response = requests.get(url, params={"page": total_pages})
         last_data = last_response.json()
         
-        # Calculate expected items on last page
         expected_items_on_last_page = total_items % per_page
         if expected_items_on_last_page == 0:
             expected_items_on_last_page = per_page
         
-        # Assert
         actual_items_on_last_page = len(last_data["data"])
         assert actual_items_on_last_page == expected_items_on_last_page, \
             f"Last page should have {expected_items_on_last_page} items, got {actual_items_on_last_page}"
@@ -516,16 +443,12 @@ class TestHeaders:
     @pytest.mark.regression
     def test_response_headers(self):
         """Test that response contains expected headers"""
-        # Arrange
-        url = f"{BASE_URL}/api/users/1"
+        url = f"{API_BASE_URL}/api/users/1"
         
-        # Act
         response = requests.get(url)
         
-        # Assert
         assert response.status_code == 200
         
-        # Check important headers
         assert "Content-Type" in response.headers
         assert "application/json" in response.headers["Content-Type"]
         
@@ -534,5 +457,4 @@ class TestHeaders:
 
 
 if __name__ == "__main__":
-    # Run tests with: python test_users.py
     pytest.main([__file__, "-v", "-s", "--tb=short"])
