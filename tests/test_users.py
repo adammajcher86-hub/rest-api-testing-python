@@ -9,13 +9,14 @@ Then run tests: pytest -v tests/test_users.py
 import requests
 import pytest
 import time
+import os
 
 
 class TestUsersAPI:
     """Test suite for Users API endpoints"""
     
     # Change this to use local server
-    BASE_URL = "http://localhost:5000"  # Local mock server
+    BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
     # BASE_URL = "https://reqres.in"    # Uncomment to use real API
     
     @pytest.mark.smoke
