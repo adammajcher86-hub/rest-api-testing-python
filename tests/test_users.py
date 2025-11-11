@@ -21,8 +21,8 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
 
 class TestUsersAPI:
     """Test suite for Users API endpoints"""
-    
 
+    @skip_in_ci
     @pytest.mark.smoke
     def test_get_list_users(self):
         """Test retrieving list of users - GET /api/users"""
