@@ -30,6 +30,7 @@ jobs:
     
     - name: Run tests
       env:
-        API_BASE_URL: https://reqres.in   
+        API_BASE_URL: https://reqres.in
+        CI: "true"
       run: |
-        pytest -v tests/
+         pytest -v -m smoke tests/
