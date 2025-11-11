@@ -33,4 +33,4 @@ jobs:
         API_BASE_URL: https://reqres.in
         CI: "true"
       run: |
-         pytest -v -m smoke tests/
+         pytest -v tests/
