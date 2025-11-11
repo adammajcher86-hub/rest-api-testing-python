@@ -33,4 +33,48 @@ jobs:
         API_BASE_URL: https://reqres.in
         CI: "true"
       run: |
-         pytest -v tests/
+        pytest -v tests/
+
+  # NEW JOB - Black formatting check
+  black:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Black
+      run: |
+        python -m pip install --upgrade pip
+        pip install black
+
+    - name: Check formatting with Black
+      run: |
+        black --check --diff .
+
+  # NEW JOB - Ruff linting
+  ruff:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Ruff
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff
+
+    - name: Lint with Ruff
+      run: |
+        ruff check .
