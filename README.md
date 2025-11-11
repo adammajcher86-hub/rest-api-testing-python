@@ -98,15 +98,16 @@ pytest -v --log-file=test_run.log tests/
 - `ERROR` - Critical failures ❌
 
 Example output:
+```bash
+INFO     Attempting to get user ID 2 
+WARNING  ⚠️  User ID 2 failed with status 404 
+INFO     ✅ User ID 1 successful 
 ```
-INFO     Attempting to get user ID 2
-WARNING  ⚠️  User ID 2 failed with status 404
-INFO     ✅ User ID 1 successful
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
-
+```
 **Tests fail with "Connection refused"**
 - Make sure the mock API server is running: `python src/mock_api_server.py`
 - Check the server is on port 5000: `http://localhost:5000`
