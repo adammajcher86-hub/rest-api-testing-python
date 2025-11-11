@@ -99,7 +99,9 @@ class TestUsersAPI:
         """Test retrieving a single user by ID - GET /api/users/{id}"""
         user_ids_to_try = [2, 1, 3, 4]
 
-        logger.info(f"Testing single user retrieval with fallback IDs: {user_ids_to_try}")
+        logger.info(
+            f"Testing single user retrieval with fallback IDs: {user_ids_to_try}"
+        )
 
         response = None
         successful_user_id = None
@@ -255,7 +257,9 @@ class TestUsersAPI:
         total_pages = first_data["total_pages"]
         all_users.extend(first_data["data"])
 
-        logger.info(f"First page retrieved: {len(first_data['data'])} users, {total_pages} total pages")
+        logger.info(
+            f"First page retrieved: {len(first_data['data'])} users, {total_pages} total pages"
+        )
 
         # Get remaining pages
         for page in range(2, total_pages + 1):
@@ -271,7 +275,9 @@ class TestUsersAPI:
         user_ids = [user["id"] for user in all_users]
         assert len(user_ids) == len(set(user_ids)), "All user IDs should be unique"
 
-        logger.info(f"✅ Retrieved all {len(all_users)} users across {total_pages} pages")
+        logger.info(
+            f"✅ Retrieved all {len(all_users)} users across {total_pages} pages"
+        )
 
     @pytest.mark.regression
     def test_user_data_structure(self):
@@ -398,7 +404,9 @@ class TestAuthentication:
         assert "id" in response_data, "Response should contain id"
         assert "token" in response_data, "Response should contain token"
 
-        logger.info(f"✅ Registered successfully with token: {response_data['token'][:10]}...")
+        logger.info(
+            f"✅ Registered successfully with token: {response_data['token'][:10]}..."
+        )
 
     @skip_in_ci
     @pytest.mark.negative
@@ -469,9 +477,9 @@ class TestResponseTiming:
         response_time = response.elapsed.total_seconds()
 
         assert response.status_code == 200
-        assert response_time < max_response_time, (
-            f"Response time {response_time:.2f}s exceeds threshold {max_response_time}s"
-        )
+        assert (
+            response_time < max_response_time
+        ), f"Response time {response_time:.2f}s exceeds threshold {max_response_time}s"
 
         logger.info(
             f"✅ Response time: {response_time:.3f}s "
