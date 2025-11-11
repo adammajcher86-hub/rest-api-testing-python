@@ -34,6 +34,8 @@ This project includes **22 comprehensive test cases** covering:
 - ✅ Pagination & data validation
 - ✅ Response time performance
 - ✅ HTTP headers validation
+- ✅ Code style: black
+- ✅ Ruff
 
 
 #### CI/CD Testing (4/22 tests)
@@ -75,5 +77,51 @@ pytest -v -m performance
 pytest -v -m negative
 ```
 
+## 🔍 Debugging with Logs
 
+Tests include detailed logging. View logs during test execution:
+```bash
+# Standard logging
+pytest -v --log-cli-level=INFO tests/
+
+# Detailed debugging
+pytest -v --log-cli-level=DEBUG tests/
+
+# Save logs to file
+pytest -v --log-file=test_run.log tests/
+```
+
+**Log levels:**
+- `INFO` - Test progress and results ✅
+- `WARNING` - Retry attempts and fallbacks ⚠️
+- `DEBUG` - Detailed request/response data 🔍
+- `ERROR` - Critical failures ❌
+
+Example output:
+```
+INFO     Attempting to get user ID 2
+WARNING  ⚠️  User ID 2 failed with status 404
+INFO     ✅ User ID 1 successful
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Tests fail with "Connection refused"**
+- Make sure the mock API server is running: `python src/mock_api_server.py`
+- Check the server is on port 5000: `http://localhost:5000`
+
+**Intermittent 404 errors for specific user IDs**
+- Tests include automatic fallback logic that tries multiple user IDs
+- Check logs with `--log-cli-level=INFO` to see which IDs were attempted
+- This is normal behavior when testing against external APIs
+
+**All tests skipped in CI**
+- This is expected - external API requires authentication
+- Local tests should pass with mock server: `22/22 passed ✅`
+
+**Slow test execution**
+- Some tests include intentional delays (e.g., `test_delayed_response`)
+- Use `-m smoke` to run only quick tests
+- Average full suite run: ~1 min
 

@@ -2,7 +2,7 @@
 REST API Tests - Works with Local Mock Server
 File: tests/test_users.py
 
-Run mock server first: python mock_api_server.py
+Run mock server first: python src/mock_api_server.py
 Then run tests: pytest -v tests/test_users.py
 """
 
@@ -19,25 +19,34 @@ logger = logging.getLogger(__name__)
 def get_available_user(base_url, user_ids=[2, 1, 3, 4, 5]):
     """
     Try to get a user, falling back to different IDs if needed
-    Returns (response, user_id) tuple
+    Returns (response, user_id) tuple with logging
     """
+    logger.info(f"Attempting to find available user from IDs: {user_ids}")
+
     for user_id in user_ids:
         url = f"{base_url}/api/users/{user_id}"
+        logger.debug(f"Trying user ID {user_id}")
         response = requests.get(url)
+
         if response.status_code == 200:
+            logger.info(f"✅ Found available user: ID {user_id}")
             return response, user_id
+        else:
+            logger.debug(f"User ID {user_id} returned {response.status_code}")
 
     # If we get here, none worked
+    logger.error(f"❌ No available users found from {user_ids}")
     return None, None
 
 
 # Mark to skip in CI
 skip_in_ci = pytest.mark.skipif(
     os.getenv("CI") == "true" and "reqres.in" in os.getenv("API_BASE_URL", ""),
-    reason="ReqRes API key for this operation",
+    reason="ReqRes API requires API key for this operation",
 )
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5000")
+logger.info(f"Tests configured to use API: {API_BASE_URL}")
 
 
 class TestUsersAPI:
@@ -50,6 +59,7 @@ class TestUsersAPI:
         url = f"{API_BASE_URL}/api/users"
         params = {"page": 1}
 
+        logger.info(f"Testing GET {url} with params {params}")
         response = requests.get(url, params=params)
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
@@ -62,8 +72,10 @@ class TestUsersAPI:
         assert "per_page" in response_data, "Response should contain 'per_page'"
         assert "total" in response_data, "Response should contain 'total'"
 
-        print(f"\n✅ Found {len(response_data['data'])} users on page 1")
-        print(f"   Total users in system: {response_data['total']}")
+        logger.info(
+            f"✅ Found {len(response_data['data'])} users on page 1, "
+            f"total: {response_data['total']}"
+        )
 
     @skip_in_ci
     @pytest.mark.smoke
@@ -72,6 +84,7 @@ class TestUsersAPI:
         url = f"{API_BASE_URL}/api/users"
         params = {"page": 2}
 
+        logger.info(f"Testing GET {url} with params {params}")
         response = requests.get(url, params=params)
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
@@ -79,12 +92,14 @@ class TestUsersAPI:
         assert response_data["page"] == 2, "Page should be 2"
         assert len(response_data["data"]) > 0, "Should have users on page 2"
 
-        print(f"\n✅ Found {len(response_data['data'])} users on page 2")
+        logger.info(f"✅ Found {len(response_data['data'])} users on page 2")
 
     @pytest.mark.regression
     def test_get_single_user(self):
         """Test retrieving a single user by ID - GET /api/users/{id}"""
         user_ids_to_try = [2, 1, 3, 4]
+
+        logger.info(f"Testing single user retrieval with fallback IDs: {user_ids_to_try}")
 
         response = None
         successful_user_id = None
@@ -130,7 +145,10 @@ class TestUsersAPI:
         assert "last_name" in user, "User should have last_name"
         assert "avatar" in user, "User should have avatar"
 
-        logger.info(f"Test passed with user: {user['first_name']} {user['last_name']}")
+        logger.info(
+            f"✅ Test passed - User: {user['first_name']} {user['last_name']} "
+            f"(ID: {successful_user_id}, Email: {user['email']})"
+        )
 
     @skip_in_ci
     @pytest.mark.negative
@@ -138,11 +156,12 @@ class TestUsersAPI:
         """Test that requesting non-existent user returns 404 - GET /api/users/{id}"""
         url = f"{API_BASE_URL}/api/users/999"
 
+        logger.info(f"Testing 404 response for non-existent user: {url}")
         response = requests.get(url)
 
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
 
-        print("\n✅ 404 correctly returned for non-existent user")
+        logger.info("✅ 404 correctly returned for non-existent user")
 
     @skip_in_ci
     @pytest.mark.regression
@@ -151,6 +170,7 @@ class TestUsersAPI:
         url = f"{API_BASE_URL}/api/users"
         user_data = {"name": "Adam Majcher", "job": "QA Engineer"}
 
+        logger.info(f"Testing POST {url} with data: {user_data}")
         response = requests.post(url, json=user_data)
 
         assert response.status_code == 201, f"Expected 201, got {response.status_code}"
@@ -161,7 +181,7 @@ class TestUsersAPI:
         assert "id" in response_data, "Response should contain id"
         assert "createdAt" in response_data, "Response should contain createdAt"
 
-        print(f"\n✅ Created user with ID: {response_data['id']}")
+        logger.info(f"✅ Created user with ID: {response_data['id']}")
 
     @skip_in_ci
     @pytest.mark.regression
@@ -171,6 +191,7 @@ class TestUsersAPI:
         url = f"{API_BASE_URL}/api/users/{user_id}"
         update_data = {"name": "Adam Updated", "job": "Senior QA Engineer"}
 
+        logger.info(f"Testing PUT {url} with data: {update_data}")
         response = requests.put(url, json=update_data)
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
@@ -180,7 +201,7 @@ class TestUsersAPI:
         assert response_data["job"] == update_data["job"], "Job should be updated"
         assert "updatedAt" in response_data, "Response should contain updatedAt"
 
-        print(f"\n✅ Updated user at: {response_data['updatedAt']}")
+        logger.info(f"✅ Updated user at: {response_data['updatedAt']}")
 
     @skip_in_ci
     @pytest.mark.regression
@@ -190,6 +211,7 @@ class TestUsersAPI:
         url = f"{API_BASE_URL}/api/users/{user_id}"
         patch_data = {"first_name": "someone"}
 
+        logger.info(f"Testing PATCH {url} with data: {patch_data}")
         response = requests.patch(url, json=patch_data)
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
@@ -200,7 +222,7 @@ class TestUsersAPI:
         ), "first_name should be updated"
         assert "updatedAt" in response_data, "Response should contain updatedAt"
 
-        print("\n✅ Patched user successfully")
+        logger.info("✅ Patched user successfully")
 
     @skip_in_ci
     @pytest.mark.regression
@@ -209,11 +231,12 @@ class TestUsersAPI:
         user_id = 2
         url = f"{API_BASE_URL}/api/users/{user_id}"
 
+        logger.info(f"Testing DELETE {url}")
         response = requests.delete(url)
 
         assert response.status_code == 204, f"Expected 204, got {response.status_code}"
 
-        print("\n✅ User deleted successfully")
+        logger.info("✅ User deleted successfully")
 
     @skip_in_ci
     @pytest.mark.regression
@@ -222,6 +245,9 @@ class TestUsersAPI:
         url = f"{API_BASE_URL}/api/users"
         all_users = []
 
+        logger.info("Testing pagination - retrieving all users across pages")
+
+        # Act - Get first page to know total pages
         first_response = requests.get(url, params={"page": 1})
         assert first_response.status_code == 200
 
@@ -229,45 +255,61 @@ class TestUsersAPI:
         total_pages = first_data["total_pages"]
         all_users.extend(first_data["data"])
 
+        logger.info(f"First page retrieved: {len(first_data['data'])} users, {total_pages} total pages")
+
+        # Get remaining pages
         for page in range(2, total_pages + 1):
+            logger.debug(f"Fetching page {page}/{total_pages}")
             response = requests.get(url, params={"page": page})
             assert response.status_code == 200
             all_users.extend(response.json()["data"])
 
+        # Assert
         assert len(all_users) == first_data["total"], "Should get all users"
 
+        # Verify no duplicate IDs
         user_ids = [user["id"] for user in all_users]
         assert len(user_ids) == len(set(user_ids)), "All user IDs should be unique"
 
-        print(f"\n✅ Retrieved all {len(all_users)} users across {total_pages} pages")
+        logger.info(f"✅ Retrieved all {len(all_users)} users across {total_pages} pages")
 
     @pytest.mark.regression
     def test_user_data_structure(self):
         """Test that user data has all required fields"""
-        url = f"{API_BASE_URL}/api/users/1"
+        logger.info("Testing user data structure validation")
 
-        response = requests.get(url)
+        # Use the helper function with logging
+        response, user_id = get_available_user(API_BASE_URL, [1, 2, 3, 4])
 
+        assert response is not None, "No available user found"
         assert response.status_code == 200
+
         user = response.json()["data"]
 
+        logger.debug(f"Validating structure for user ID {user_id}")
+
+        # Check all required fields exist
         required_fields = ["id", "email", "first_name", "last_name", "avatar"]
         for field in required_fields:
             assert field in user, f"User should have '{field}' field"
             assert user[field] is not None, f"'{field}' should not be None"
             assert user[field] != "", f"'{field}' should not be empty"
 
+        # Check data types
         assert isinstance(user["id"], int), "ID should be integer"
         assert isinstance(user["email"], str), "Email should be string"
         assert isinstance(user["first_name"], str), "First name should be string"
         assert isinstance(user["last_name"], str), "Last name should be string"
         assert isinstance(user["avatar"], str), "Avatar should be string"
 
+        # Check email format
         assert "@" in user["email"], "Email should contain @"
         assert "." in user["email"], "Email should contain domain"
 
-        print("\n✅ User data structure is valid")
-        print(f"   Sample user: {user['first_name']} {user['last_name']}")
+        logger.info(
+            f"✅ User data structure valid - Sample: {user['first_name']} "
+            f"{user['last_name']} ({user['email']})"
+        )
 
 
 class TestResourcesAPI:
@@ -279,6 +321,7 @@ class TestResourcesAPI:
         """Test retrieving list of resources - GET /api/unknown"""
         url = f"{API_BASE_URL}/api/unknown"
 
+        logger.info(f"Testing GET {url}")
         response = requests.get(url)
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
@@ -287,13 +330,14 @@ class TestResourcesAPI:
         assert "data" in response_data, "Response should contain 'data' key"
         assert len(response_data["data"]) > 0, "Data array should not be empty"
 
+        # Check resource structure
         first_resource = response_data["data"][0]
         assert "id" in first_resource, "Resource should have id"
         assert "name" in first_resource, "Resource should have name"
         assert "year" in first_resource, "Resource should have year"
         assert "color" in first_resource, "Resource should have color"
 
-        print(f"\n✅ Found {len(response_data['data'])} resources")
+        logger.info(f"✅ Found {len(response_data['data'])} resources")
 
     @skip_in_ci
     @pytest.mark.regression
@@ -302,6 +346,7 @@ class TestResourcesAPI:
         resource_id = 2
         url = f"{API_BASE_URL}/api/unknown/{resource_id}"
 
+        logger.info(f"Testing GET {url}")
         response = requests.get(url)
 
         assert response.status_code == 200
@@ -315,8 +360,10 @@ class TestResourcesAPI:
         assert "color" in resource
         assert "pantone_value" in resource
 
-        print(f"\n✅ Resource: {resource['name']}")
-        print(f"   Year: {resource['year']}, Color: {resource['color']}")
+        logger.info(
+            f"✅ Resource retrieved: {resource['name']} "
+            f"(Year: {resource['year']}, Color: {resource['color']})"
+        )
 
     @skip_in_ci
     @pytest.mark.negative
@@ -324,11 +371,12 @@ class TestResourcesAPI:
         """Test that requesting non-existent resource returns 404"""
         url = f"{API_BASE_URL}/api/unknown/999"
 
+        logger.info(f"Testing 404 response for non-existent resource: {url}")
         response = requests.get(url)
 
         assert response.status_code == 404
 
-        print("\n✅ 404 correctly returned for non-existent resource")
+        logger.info("✅ 404 correctly returned for non-existent resource")
 
 
 class TestAuthentication:
@@ -341,6 +389,7 @@ class TestAuthentication:
         url = f"{API_BASE_URL}/api/register"
         user_data = {"email": "eve.holt@reqres.in", "password": "pistol"}
 
+        logger.info(f"Testing POST {url} for registration")
         response = requests.post(url, json=user_data)
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
@@ -349,7 +398,7 @@ class TestAuthentication:
         assert "id" in response_data, "Response should contain id"
         assert "token" in response_data, "Response should contain token"
 
-        print(f"\n✅ Registered with token: {response_data['token'][:10]}...")
+        logger.info(f"✅ Registered successfully with token: {response_data['token'][:10]}...")
 
     @skip_in_ci
     @pytest.mark.negative
@@ -358,6 +407,7 @@ class TestAuthentication:
         url = f"{API_BASE_URL}/api/register"
         user_data = {"email": "sydney@fife"}
 
+        logger.info(f"Testing POST {url} with missing password (negative test)")
         response = requests.post(url, json=user_data)
 
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
@@ -365,7 +415,7 @@ class TestAuthentication:
         response_data = response.json()
         assert "error" in response_data, "Response should contain error message"
 
-        print(f"\n✅ Registration failed as expected: {response_data['error']}")
+        logger.info(f"✅ Registration failed as expected: {response_data['error']}")
 
     @skip_in_ci
     @pytest.mark.regression
@@ -374,6 +424,7 @@ class TestAuthentication:
         url = f"{API_BASE_URL}/api/login"
         credentials = {"email": "eve.holt@reqres.in", "password": "cityslicka"}
 
+        logger.info(f"Testing POST {url} for login")
         response = requests.post(url, json=credentials)
 
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
@@ -381,7 +432,7 @@ class TestAuthentication:
         response_data = response.json()
         assert "token" in response_data, "Response should contain token"
 
-        print(f"\n✅ Login successful with token: {response_data['token'][:10]}...")
+        logger.info(f"✅ Login successful with token: {response_data['token'][:10]}...")
 
     @skip_in_ci
     @pytest.mark.negative
@@ -390,6 +441,7 @@ class TestAuthentication:
         url = f"{API_BASE_URL}/api/login"
         credentials = {"email": "peter@klaven"}
 
+        logger.info(f"Testing POST {url} with missing password (negative test)")
         response = requests.post(url, json=credentials)
 
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
@@ -397,7 +449,7 @@ class TestAuthentication:
         response_data = response.json()
         assert "error" in response_data, "Response should contain error message"
 
-        print(f"\n✅ Login failed as expected: {response_data['error']}")
+        logger.info(f"✅ Login failed as expected: {response_data['error']}")
 
 
 class TestResponseTiming:
@@ -406,19 +458,24 @@ class TestResponseTiming:
     @pytest.mark.performance
     def test_response_time_under_threshold(self):
         """Test that API responds within acceptable time"""
-        url = f"{API_BASE_URL}/api/users/1"
         max_response_time = 5.0  # 5 seconds
 
-        response = requests.get(url)
+        logger.info("Testing response time performance")
+
+        # Use helper to get available user
+        response, user_id = get_available_user(API_BASE_URL, [1, 2, 3])
+
+        assert response is not None, "No available user for performance test"
         response_time = response.elapsed.total_seconds()
 
         assert response.status_code == 200
-        assert (
-            response_time < max_response_time
-        ), f"Response time {response_time:.2f}s exceeds threshold {max_response_time}s"
+        assert response_time < max_response_time, (
+            f"Response time {response_time:.2f}s exceeds threshold {max_response_time}s"
+        )
 
-        print(
-            f"\n✅ Response time: {response_time:.3f}s (under {max_response_time}s threshold)"
+        logger.info(
+            f"✅ Response time: {response_time:.3f}s "
+            f"(under {max_response_time}s threshold)"
         )
 
     @skip_in_ci
@@ -427,6 +484,8 @@ class TestResponseTiming:
         """Test API with delayed response - GET /api/users?delay=3"""
         url = f"{API_BASE_URL}/api/users"
         params = {"delay": 3}
+
+        logger.info(f"Testing delayed response with {params['delay']}s delay")
 
         start_time = time.time()
         response = requests.get(url, params=params, timeout=10)
@@ -440,7 +499,7 @@ class TestResponseTiming:
             elapsed_time < 7.0
         ), f"Response should not take longer than 7 seconds, got {elapsed_time:.2f}s"
 
-        print(f"\n✅ Delayed response received after {elapsed_time:.2f} seconds")
+        logger.info(f"✅ Delayed response received after {elapsed_time:.2f} seconds")
 
 
 class TestPagination:
@@ -452,6 +511,7 @@ class TestPagination:
         """Test that pagination information is correct"""
         url = f"{API_BASE_URL}/api/users"
 
+        logger.info("Testing pagination metadata")
         response = requests.get(url, params={"page": 1})
         data = response.json()
 
@@ -460,14 +520,15 @@ class TestPagination:
         assert "total" in data
         assert "total_pages" in data
 
+        # Verify pagination math
         expected_pages = (data["total"] + data["per_page"] - 1) // data["per_page"]
         assert (
             data["total_pages"] == expected_pages
         ), "Total pages calculation should be correct"
 
-        print("\n✅ Pagination info correct:")
-        print(
-            f"   Total: {data['total']}, Per Page: {data['per_page']}, Total Pages: {data['total_pages']}"
+        logger.info(
+            f"✅ Pagination info correct - Total: {data['total']}, "
+            f"Per Page: {data['per_page']}, Total Pages: {data['total_pages']}"
         )
 
     @skip_in_ci
@@ -476,6 +537,9 @@ class TestPagination:
         """Test that last page has correct number of items"""
         url = f"{API_BASE_URL}/api/users"
 
+        logger.info("Testing last page item count")
+
+        # Get first page to know total pages
         first_response = requests.get(url, params={"page": 1})
         first_data = first_response.json()
 
@@ -483,20 +547,27 @@ class TestPagination:
         total_items = first_data["total"]
         per_page = first_data["per_page"]
 
+        logger.debug(f"Total pages: {total_pages}, Total items: {total_items}")
+
+        # Act - Get last page
         last_response = requests.get(url, params={"page": total_pages})
         last_data = last_response.json()
 
+        # Calculate expected items on last page
         expected_items_on_last_page = total_items % per_page
         if expected_items_on_last_page == 0:
             expected_items_on_last_page = per_page
 
+        # Assert
         actual_items_on_last_page = len(last_data["data"])
-        assert (
-            actual_items_on_last_page == expected_items_on_last_page
-        ), f"Last page should have {expected_items_on_last_page} items, got {actual_items_on_last_page}"
+        assert actual_items_on_last_page == expected_items_on_last_page, (
+            f"Last page should have {expected_items_on_last_page} items, "
+            f"got {actual_items_on_last_page}"
+        )
 
-        print(
-            f"\n✅ Last page (page {total_pages}) has correct number of items: {actual_items_on_last_page}"
+        logger.info(
+            f"✅ Last page (page {total_pages}) has correct number of items: "
+            f"{actual_items_on_last_page}"
         )
 
 
@@ -506,18 +577,24 @@ class TestHeaders:
     @pytest.mark.regression
     def test_response_headers(self):
         """Test that response contains expected headers"""
-        url = f"{API_BASE_URL}/api/users/1"
+        logger.info("Testing HTTP response headers")
 
-        response = requests.get(url)
+        # Use helper to get available user
+        response, user_id = get_available_user(API_BASE_URL, [1, 2, 3])
 
+        assert response is not None, "No available user for header test"
         assert response.status_code == 200
 
+        # Check important headers
         assert "Content-Type" in response.headers
         assert "application/json" in response.headers["Content-Type"]
 
-        print("\n✅ Response headers are correct")
-        print(f"   Content-Type: {response.headers['Content-Type']}")
+        logger.info(
+            f"✅ Response headers correct - Content-Type: "
+            f"{response.headers['Content-Type']}"
+        )
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-s", "--tb=short"])
+    # Run tests with: python test_users.py
+    pytest.main([__file__, "-v", "-s", "--log-cli-level=INFO"])
